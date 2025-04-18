@@ -2,8 +2,12 @@
 import React, { useState, useRef } from 'react';
 import BrowserView from '@/components/BrowserView';
 import Terminal from '@/components/Terminal';
+import SidebarMenu from '@/components/SidebarMenu';
 import AIAutomationPanel from '@/components/panels/AIAutomationPanel';
-
+import CodeAutomationPanel from '@/components/panels/CodeAutomationPanel';
+import ReportPanel from '@/components/panels/ReportPanel';
+import BurpSuitePanel from '@/components/panels/BurpSuitePanel';
+import TemplatesPanel from '@/components/panels/TemplatesPanel';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
@@ -24,7 +28,18 @@ const Index = () => {
     switch (activeSidebarItem) {
       // Main menu items
       case 'ai':
-        return <AIAutomationPanel />;    
+        return <AIAutomationPanel />;
+      case 'code':
+        return <CodeAutomationPanel />;
+      case 'report':
+        return <ReportPanel />;
+      case 'burp':
+        return <BurpSuitePanel />;
+        
+      // Templates - now all under one panel
+      case 'templates':
+        return <TemplatesPanel />;
+        
       default:
         return <AIAutomationPanel />;
     }
@@ -50,6 +65,12 @@ const Index = () => {
             <div className="flex h-full">
               <div className="flex-1">
                 {renderActivePanel()}
+              </div>
+              <div className="border-l border-[#323232] bg-[#252526]">
+                <SidebarMenu
+                  activeItem={activeSidebarItem}
+                  onItemChange={setActiveSidebarItem}
+                />
               </div>
             </div>
           </ResizablePanel>
