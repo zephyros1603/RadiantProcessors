@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Custom image name
-IMAGE_NAME="my-kali"
+IMAGE_NAME="kali:v1"
 # Custom container name
 CONTAINER_NAME="kali"
 
@@ -16,9 +16,13 @@ else
   echo "[+] Running new container from image '${IMAGE_NAME}'..."
   docker run -it \
     --rm --name $CONTAINER_NAME \
-    -v ~/kali-shared:/root/shared \
     --cap-add=NET_ADMIN \
     --cap-add=NET_RAW \
     --privileged \
+    -v ~/Desktop/AiBB/Backend/RAG/logs:/root/logs \
     $IMAGE_NAME
 fi
+
+
+ 
+  

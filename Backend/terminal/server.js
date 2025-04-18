@@ -4,6 +4,7 @@ const http = require('http');
 const path = require('path');
 const pty = require('node-pty');
 const os = require('os');
+// const logCommand = require('./scrapeTerminal');
 
 const app = express();
 const server = http.createServer(app);
@@ -61,6 +62,7 @@ wss.on('connection', (ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         try {
           ws.send(data);
+          console.log(`Data sent to WebSocket: ${data}`);
         } catch (error) {
           console.error('Error sending data to WebSocket:', error);
         }
@@ -74,7 +76,14 @@ wss.on('connection', (ws) => {
       try {
         if (ptyProcess && ptyProcess.pid) {
           const input = msg.toString();
-          // Add newline for command execution
+          console.log(`Received input: ${input}`);
+
+          // Log the command if it is not an initial setup command
+          // if (input !== 'export TERM=xterm-256color' && input !== 'clear') {
+          //   logCommand(input);
+          // }
+
+          // Write the input to the terminal
           ptyProcess.write(input === '\r' ? '\n' : input);
         }
       } catch (error) {
