@@ -219,7 +219,7 @@ const AIAutomationPanel: React.FC = () => {
         </form>
         <Button variant='ghost'
         onClick={()=>setDeepthink((prev)=>!prev)}
-        className={`m-2 rounded-full opacity-85 ${deepthink? ' bg-neutral-300/30  text-white':""}`}>
+        className={`m-2 rounded-full border-2 opacity-85 ${deepthink? ' bg-neutral-300/30  text-white':""}`}>
           Deepthink
         </Button>
       </div>
