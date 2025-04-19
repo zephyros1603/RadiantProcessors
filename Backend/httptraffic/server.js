@@ -1,113 +1,114 @@
-const http = require('http');
-const https = require('https');
-const { URL } = require('url');
-const forge = require('node-forge');
+import express from 'express';
+import http from 'http';
+import { WebSocketServer } from 'ws';
+import axios from 'axios';
+import cors from 'cors';
 
-class ProxyServer {
-  constructor(store, broadcast) {
-    this.store = store;
-    this.broadcast = broadcast;
-    this.servers = {};
-    this.caCert = this.generateCA();
-  }
+const app = express();
+const apiPort = 3000;
+const wsPort = 3001;
 
-  generateCA() {
-    const keys = forge.pki.rsa.generateKeyPair(2048);
-    const cert = forge.pki.createCertificate();
-    cert.publicKey = keys.publicKey;
-    cert.serialNumber = '01';
-    cert.validity.notBefore = new Date();
-    cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setFullYear(
-      cert.validity.notBefore.getFullYear() + 1
-    );
+// In-memory state
+let capturing = false;
+let requests = [];
 
-    const attrs = [
-      { name: 'commonName', value: 'TrafficAnalyzerCA' },
-      { name: 'organizationName', value: 'SecurityAI' }
-    ];
-    cert.setSubject(attrs);
-    cert.setIssuer(attrs);
-    cert.sign(keys.privateKey);
+// Express middleware
+app.use(cors());
+app.use(express.json()); // parse JSON bodies :contentReference[oaicite:4]{index=4}
 
-    return {
-      key: forge.pki.privateKeyToPem(keys.privateKey),
-      cert: forge.pki.certificateToPem(cert)
+// --- REST API Endpoints ---
+
+// Start capture
+app.post('/api/capture/start', (_req, res) => {
+  capturing = true;
+  broadcast({ type: 'status', capturing });
+  res.json({ capturing });
+});
+
+// Stop capture
+app.post('/api/capture/stop', (_req, res) => {
+  capturing = false;
+  broadcast({ type: 'status', capturing });
+  res.json({ capturing });
+});
+
+// Clear all recorded requests
+app.delete('/api/requests', (_req, res) => {
+  requests = [];
+  broadcast({ type: 'init', capturing, requests });
+  res.status(204).end();
+});
+
+// Export all recorded requests as JSON
+app.get('/api/export', (_req, res) => {
+  res.setHeader('Content-Disposition', 'attachment; filename="export.json"');
+  res.json(requests);
+});
+
+// Execute/send a request (called by your React RequestDetails)
+app.post('/api/requests/:id/send', async (req, res) => {
+  const { id } = req.params;
+  const { method, url, headers, body } = req.body;
+  const timestamp = new Date().toISOString();
+  const entry = { id, method, url, headers, body, timestamp };
+
+  // Record initial request
+  requests = [entry, ...requests];
+  broadcast({ type: 'request', request: entry });
+
+  try {
+    const start = Date.now();
+    const response = await axios({ method, url, headers, data: body, responseType: 'text' });
+    const duration = Date.now() - start;
+    const responseEntry = {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      body: typeof response.data === 'string' ? response.data : JSON.stringify(response.data),
+      timestamp: new Date().toISOString(),
+      duration,
     };
-  }
+    const updated = { ...entry, response: responseEntry };
 
-  async handleRequest(clientReq, clientRes) {
-    const startTime = Date.now();
-    // Log incoming request
-    console.log(`↗️ [Proxy] ${clientReq.method} ${clientReq.url}`);
-    console.log('   Request Headers:', clientReq.headers);
-
-    const requestData = {
-      method: clientReq.method,
-      url: clientReq.url,
-      headers: { ...clientReq.headers },
-      body: []
+    // Update stored requests
+    requests = [updated, ...requests.filter(r => r.id !== id)];
+    broadcast({ type: 'request', request: updated });
+    res.json(updated);
+  } catch (err) {
+    const responseEntry = {
+      status: err.response?.status || 0,
+      statusText: err.message,
+      headers: err.response?.headers || {},
+      body: err.response?.data ? JSON.stringify(err.response.data) : '',
+      timestamp: new Date().toISOString(),
     };
+    const updated = { ...entry, response: responseEntry, error: true };
+    requests = [updated, ...requests.filter(r => r.id !== id)];
+    broadcast({ type: 'request', request: updated });
+    res.status(500).json(updated);
+  }
+});
 
-    try {
-      const target = new URL(clientReq.url);
-      const proxyReq = (target.protocol === 'https:' ? https : http).request({
-        hostname: target.hostname,
-        port: target.port || (target.protocol === 'https:' ? 443 : 80),
-        path: target.pathname + target.search,
-        method: clientReq.method,
-        headers: clientReq.headers
-      });
+// Start HTTP API server
+app.listen(apiPort, () => {
+  console.log(`REST API listening on http://localhost:${apiPort}`);
+});
 
-      clientReq.pipe(proxyReq);
+// --- WebSocket Server (broadcasts to React) ---
 
-      proxyReq.on('response', proxyRes => {
-        const responseData = {
-          status: proxyRes.statusCode,
-          headers: proxyRes.headers,
-          body: [],
-          duration: Date.now() - startTime
-        };
+const wss = new WebSocketServer({ port: wsPort });
+wss.on('connection', ws => {
+  // On new client connect, send initial state
+  ws.send(JSON.stringify({ type: 'init', capturing, requests }));
+});
 
-        proxyRes.on('data', chunk => responseData.body.push(chunk));
-        proxyRes.on('end', () => {
-          responseData.body = Buffer.concat(responseData.body).toString();
-          const saved = this.store.addRequest({
-            ...requestData,
-            response: responseData
-          });
-          this.broadcast({ type: 'request', request: saved });
-
-          // Log response details
-          console.log(`↙️ [Proxy] ${clientReq.method} ${clientReq.url} → ${responseData.status} (${responseData.duration}ms)`);
-          console.log('   Response Headers:', responseData.headers);
-
-          clientRes.writeHead(proxyRes.statusCode, proxyRes.headers);
-          clientRes.end(responseData.body);
-        });
-      });
-
-      proxyReq.on('error', err => this.handleError(err, clientRes));
-    } catch (err) {
-      this.handleError(err, clientRes);
+function broadcast(msg) {
+  const data = JSON.stringify(msg);
+  for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(data);
     }
-  }
-
-  start(httpPort = 8080, httpsPort = 8443) {
-    this.servers.http = http
-      .createServer(this.handleRequest.bind(this))
-      .listen(httpPort, () => console.log(`HTTP proxy listening on ${httpPort}`));
-    this.servers.https = https
-      .createServer(this.caCert, this.handleRequest.bind(this))
-      .listen(httpsPort, () =>
-        console.log(`HTTPS proxy listening on ${httpsPort}`)
-      );
-  }
-
-  stop() {
-    Object.values(this.servers).forEach(server => server.close());
-    this.servers = {};
   }
 }
 
-module.exports = ProxyServer;
+console.log(`WebSocket server running on ws://localhost:${wsPort}`);
