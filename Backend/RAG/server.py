@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 # LM Studio settings
-LM_STUDIO_API_URL = "http://localhost:3001/v1"
+LM_STUDIO_API_URL = "http://localhost:3003/v1"
 
 # Models for request/response
 class ChatMessage(BaseModel):

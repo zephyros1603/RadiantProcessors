@@ -111,7 +111,7 @@ wss.on('connection', (ws) => {
   }
 });
 
-const PORT = 3000;
+const PORT = 3002;
 server.listen(PORT, () => {
   console.log(`Terminal server running at http://localhost:${PORT}`);
 });

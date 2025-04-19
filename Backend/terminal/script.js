@@ -12,7 +12,7 @@ const term = new Terminal({
   rows: 24
 });
 
-const ws = new WebSocket(`ws://localhost:3000`);
+const ws = new WebSocket(`ws://localhost:3002`);
 let inputBuffer = "";
 
 // Open the terminal

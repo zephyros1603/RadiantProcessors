@@ -20,7 +20,7 @@ from langchain.prompts import (
 from logs.last import get_last_command_output, clean_log_file
 
 # LM Studio settings
-LM_STUDIO_API_URL = "http://localhost:3001/v1"
+LM_STUDIO_API_URL = "http://localhost:3003/v1"
 
 class LMStudioLLM(LLM):
     """Custom LLM wrapper for LM Studio API."""

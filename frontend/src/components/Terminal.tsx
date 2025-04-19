@@ -56,7 +56,7 @@ const Terminal = forwardRef<TerminalRef, TerminalProps>(({ className, onExecuteC
     xtermRef.current.open(terminalRef.current);
     
     // Connect to WebSocket server
-    wsRef.current = new WebSocket('ws://localhost:3000');
+    wsRef.current = new WebSocket('ws://localhost:3002');
 
     wsRef.current.onopen = () => {
       if (xtermRef.current) {
