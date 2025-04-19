@@ -1,3 +1,4 @@
+// src/components/types.ts
 export interface HTTPRequest {
   id: string;
   method: string;
@@ -7,8 +8,11 @@ export interface HTTPRequest {
   timestamp: string;
   response?: {
     status: number;
-    headers: Record<string, string>;
+    statusText: string;
+    headers: Record<string, any>;
     body: string;
-    duration: number;
+    timestamp: string;
+    duration?: number;
   };
+  error?: boolean;
 }
