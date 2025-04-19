@@ -1,8 +1,11 @@
+import datetime
+import os
 import subprocess
 import sys
 import requests
 import json
 import uvicorn
+from fastapi.responses import FileResponse
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -21,7 +24,8 @@ from groq import Groq
 from logs.last import get_last_command_output, clean_log_file
 
 # Groq settings
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
+
 
 class GroqLLM(LLM):
     """Custom LLM wrapper for Groq API."""
@@ -183,6 +187,56 @@ async def clear_history():
         return {"message": "Conversation history cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error clearing history: {str(e)}")
+
+
+# Add these new endpoints before the main check
+@app.post("/generate-report")
+async def generate_report():
+    """Generate a markdown report of the conversation history."""
+    try:
+        # Generate timestamp for session
+        session_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        report_lines = [f"# 🛡️ CyberSecurity AI Chat Report\n\n🗓️ **Session Date:** {session_time}\n"]
+
+        # Get messages from shared memory
+        messages = shared_memory.chat_memory.messages
+
+        # Create reports directory if it doesn't exist
+        reports_dir = "reports"
+        if not os.path.exists(reports_dir):
+            os.makedirs(reports_dir)
+
+        # Save to Markdown file in reports directory
+        report_path = os.path.join(reports_dir, "cybersecurity_chat_report.md")
+        with open(report_path, "w", encoding="utf-8") as file:
+            file.write("\n".join(report_lines))
+
+        return {"message": "Report generated successfully", "path": report_path}
+
+    except Exception as e:
+        print(f"Error generating report: {str(e)}")  # Add debugging
+        raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
+
+@app.get("/download-report")
+async def download_report():
+    """Download the generated markdown report."""
+    try:
+        report_path = os.path.join("reports", "cybersecurity_chat_report.md")
+        if not os.path.exists(report_path):
+            raise HTTPException(status_code=404, detail="Report file not found. Generate a report first.")
+        
+        return FileResponse(
+            path=report_path,
+            filename="cybersecurity_chat_report.md",
+            media_type="text/markdown"
+        )
+
+    except Exception as e:
+        print(f"Error downloading report: {str(e)}")  # Add debugging
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error downloading report: {str(e)}")
+
 
 @app.get("/health")
 async def health_check():
