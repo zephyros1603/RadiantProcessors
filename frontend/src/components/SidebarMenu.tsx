@@ -33,7 +33,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeItem, onItemChange }) =
   const mainMenuItems = [
     { id: 'ai', title: 'AI Automation', icon: Clock },
    
-    { id: 'report', title: 'Report', icon: FileText },
+    // { id: 'report', title: 'Report', icon: FileText },
   ];
 
   // Single Templates entry instead of individual attack types
