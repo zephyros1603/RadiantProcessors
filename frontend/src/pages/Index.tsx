@@ -29,16 +29,13 @@ const Index = () => {
       // Main menu items
       case 'ai':
         return <AIAutomationPanel />;
-      case 'code':
-        return <CodeAutomationPanel />;
+     
       case 'report':
         return <ReportPanel />;
-      case 'burp':
-        return <BurpSuitePanel />;
+    
         
       // Templates - now all under one panel
-      case 'templates':
-        return <TemplatesPanel />;
+     
         
       default:
         return <AIAutomationPanel />;
