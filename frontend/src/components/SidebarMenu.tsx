@@ -32,9 +32,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeItem, onItemChange }) =
   
   const mainMenuItems = [
     { id: 'ai', title: 'AI Automation', icon: Clock },
-    { id: 'code', title: 'Code Automation', icon: Code },
-    { id: 'report', title: 'Report', icon: FileText },
-    { id: 'burp', title: 'Burp Suite', icon: Shield }
+   
+    // { id: 'report', title: 'Report', icon: FileText },
   ];
 
   // Single Templates entry instead of individual attack types

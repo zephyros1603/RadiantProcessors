@@ -4,7 +4,7 @@
 cd /Users/sanjanathyady/Desktop/AiBB/Backend/RAG
 
 # Check if we're in the correct directory
-if [ ! -f "note.py" ]; then
+if [ ! -f "groqNote.py" ]; then
     echo "Error: note.py not found in current directory"
     exit 1
 fi
@@ -22,4 +22,4 @@ source venv/bin/activate
 
 # Run the Python script
 echo "Starting RAG server..."
-python3 note.py
+python3 groqNote.py

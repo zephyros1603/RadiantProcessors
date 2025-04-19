@@ -10,7 +10,7 @@ import BurpSuitePanel from '@/components/panels/BurpSuitePanel';
 import TemplatesPanel from '@/components/panels/TemplatesPanel';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { SidebarProvider } from "@/components/ui/sidebar";
-
+import { ChatProvider } from '@/contexts/ChatContext';
 const Index = () => {
   const [terminalCommand, setTerminalCommand] = useState('');
   const [activeSidebarItem, setActiveSidebarItem] = useState('ai');
@@ -29,16 +29,13 @@ const Index = () => {
       // Main menu items
       case 'ai':
         return <AIAutomationPanel />;
-      case 'code':
-        return <CodeAutomationPanel />;
+     
       case 'report':
         return <ReportPanel />;
-      case 'burp':
-        return <BurpSuitePanel />;
+    
         
       // Templates - now all under one panel
-      case 'templates':
-        return <TemplatesPanel />;
+     
         
       default:
         return <AIAutomationPanel />;
@@ -46,6 +43,7 @@ const Index = () => {
   };
 
   return (
+    <ChatProvider>
     <div className="flex h-screen w-full bg-[#1e1e1e] text-white overflow-hidden">
       <SidebarProvider defaultOpen={false}>
         <ResizablePanelGroup direction="horizontal">
@@ -77,6 +75,7 @@ const Index = () => {
         </ResizablePanelGroup>
       </SidebarProvider>
     </div>
+    </ChatProvider>
   );
 };
 
