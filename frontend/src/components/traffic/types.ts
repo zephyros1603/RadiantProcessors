@@ -1,9 +1,14 @@
-
 export interface HTTPRequest {
-    id: string;
-    method: string;
-    url: string;
+  id: string;
+  method: string;
+  url: string;
+  headers: Record<string, string>;
+  body: string;
+  timestamp: string;
+  response?: {
     status: number;
-    timestamp: string;
-    responseTime: number;
-  }
+    headers: Record<string, string>;
+    body: string;
+    duration: number;
+  };
+}
