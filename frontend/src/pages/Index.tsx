@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import BrowserView from '@/components/BrowserView';
+import HTTPTrafficAnalyzer from '@/components/traffic/HTTPTrafficAnalyzer';
 import Terminal from '@/components/Terminal';
 import SidebarMenu from '@/components/SidebarMenu';
 import AIAutomationPanel from '@/components/panels/AIAutomationPanel';
@@ -52,7 +52,7 @@ const Index = () => {
           <ResizablePanel defaultSize={65} className="rounded-none">
             <ResizablePanelGroup direction="vertical">
               <ResizablePanel defaultSize={70} className="rounded-none">
-                <BrowserView />
+              <HTTPTrafficAnalyzer />
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={30} className="rounded-none">
