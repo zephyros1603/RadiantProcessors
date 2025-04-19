@@ -12,6 +12,7 @@ make_executable() {
 make_executable "$BASE_DIR/terminal.sh"
 make_executable "$BASE_DIR/frontend.sh"
 make_executable "$BASE_DIR/rag.sh"
+make_executable "$BASE_DIR/http.sh"
 
 # Open new terminal windows and run each script
 osascript -e '
@@ -26,6 +27,10 @@ tell application "Terminal"
     # Third terminal for RAG server
     delay 2
     do script "cd '"$BASE_DIR"' && ./rag.sh"
+    
+    # Fourth terminal for HTTP traffic server
+    delay 2
+    do script "cd '"$BASE_DIR"' && ./httptraffic.sh"
     
     activate
 end tell'

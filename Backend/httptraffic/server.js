@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';  // Add WebSocket import
 import axios from 'axios';
 import cors from 'cors';
 
@@ -102,6 +102,7 @@ wss.on('connection', ws => {
   ws.send(JSON.stringify({ type: 'init', capturing, requests }));
 });
 
+// Modified broadcast function with proper WebSocket reference
 function broadcast(msg) {
   const data = JSON.stringify(msg);
   for (const client of wss.clients) {
