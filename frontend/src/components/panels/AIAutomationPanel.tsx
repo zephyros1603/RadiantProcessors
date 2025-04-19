@@ -4,6 +4,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Copy, Send, Bot, Trash, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateResponse } from '@/lib/api';
+import { exec } from 'child_process';
+
 
 interface Message {
   role: 'user' | 'ai';
@@ -22,6 +24,7 @@ const AIAutomationPanel: React.FC = () => {
     }
   ]);
   const [isThinking, setIsThinking] = useState(false);
+  const [deepthink , setDeepthink] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -44,7 +47,7 @@ const AIAutomationPanel: React.FC = () => {
     setIsThinking(true);
     
     try {
-      const response = await generateResponse(prompt);
+      const response = await generateResponse(prompt ,deepthink );
       const aiMessage: Message = {
         role: 'ai',
         content: response.response,
@@ -214,9 +217,26 @@ const AIAutomationPanel: React.FC = () => {
             <Send size={18} />
           </Button>
         </form>
+        <Button variant='ghost'
+        onClick={()=>setDeepthink((prev)=>!prev)}
+        className={`m-2 rounded-full opacity-85 ${deepthink? ' bg-neutral-300/30  text-white':""}`}>
+          Deepthink
+        </Button>
       </div>
     </div>
   );
 };
 
 export default AIAutomationPanel;
+
+
+
+
+// curl -X POST http://localhost:8000/analyze-tool \
+//   -H "Content-Type: application/json" \
+//   -d '{
+//     "tool_output": "Starting Nmap 7.93 ( https://nmap.org ) at 2023-04-20 15:30 UTC\nNmap scan report for target.example.com (192.168.1.100)\nHost is up (0.015s latency).\nNot shown: 994 closed tcp ports (reset)\nPORT    STATE SERVICE  VERSION\n22/tcp  open  ssh      OpenSSH 8.2p1 (protocol 2.0)\n80/tcp  open  http     nginx 1.18.0\n443/tcp open  https    nginx 1.18.0\n",
+//     "tool_name": "nmap",
+//     "temperature": 0.7,
+//     "max_tokens": 800
+//   }'

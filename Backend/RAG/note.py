@@ -1,9 +1,12 @@
+import subprocess
+import sys
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import requests
 import json
+from logs.last import get_last_command_output  # Import the function
 
 # Import the LMStudioLLM class from your notebook
 from langchain.llms.base import LLM
@@ -90,8 +93,8 @@ class PromptRequest(BaseModel):
     max_tokens: Optional[int] = 512
 
 class ToolAnalysisRequest(BaseModel):
-    tool_output: str
-    tool_name: str
+    tool_output: Optional[str]=None
+    tool_name: Optional[str]=None
     temperature: Optional[float] = 0.7
     max_tokens: Optional[int] = 512
 
@@ -121,37 +124,60 @@ async def generate_response(request: PromptRequest):
 async def analyze_tool_output(request: ToolAnalysisRequest):
     """Analyze tool output using the security analysis template."""
     try:
+        # Get the last command and its output
+        last_command_data = get_last_command_output()
+        cmd = last_command_data.get("cmd")
+        output = last_command_data.get("output")
+
+        if not cmd or not output:
+            raise HTTPException(status_code=400, detail="No valid command or output found in the logs.")
+
+        print(f"Last command: {cmd}")
+        print(f"Command output:\n{output}")
+
+        # Use the output from the scripts to create the analysis prompt
+        analysis_prompt = f"""
+        You are a cybersecurity expert analyzing the results of a penetration testing tool.
+
+        Tool Name: {request.tool_name or "Unknown"}
+
+        The user has executed the following command in a Kali Linux terminal:
+
+        Command:
+        {cmd}
+
+        Output:
+        ---
+        {output}
+        ---
+
+        Based on the output, provide a detailed analysis including:
+        - A summary of what the tool did
+        - Any important findings or vulnerabilities
+        - What these findings mean in practical terms
+        - Suggested next steps or follow-up tools
+        - Risk level (Low, Medium, High) if applicable
+
+        Be precise, actionable, and technical — but also beginner-friendly if the output is simple.
+        """
+
         # Configure the LLM with the provided parameters
         llm.temperature = request.temperature
         llm.max_tokens = request.max_tokens
-        
-        # Create the analysis prompt
-        analysis_prompt = f"""
-You are a cybersecurity expert analyzing the results of a penetration testing tool.
 
-Tool Name: {request.tool_name}
+        # Generate the analysis response using the invoke method
+        response = llm.invoke(analysis_prompt)
+        if not response:
+            raise HTTPException(status_code=500, detail="LLM returned an empty response.")
 
-The user has executed the tool manually in a Kali Linux terminal. Below is the raw output from the tool:
-
----
-{request.tool_output}
----
-
-Based on the output, provide a detailed analysis including:
-- A summary of what the tool did
-- Any important findings or vulnerabilities
-- What these findings mean in practical terms
-- Suggested next steps or follow-up tools
-- Risk level (Low, Medium, High) if applicable
-
-Be precise, actionable, and technical — but also beginner-friendly if the output is simple.
-"""
-        
-        # Generate analysis
-        response = llm(analysis_prompt)
         return {"response": response}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing tool output: {str(e)}")
+
+   
+
+        
 
 @app.get("/health")
 async def health_check():

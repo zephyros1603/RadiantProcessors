@@ -1,7 +1,16 @@
-# get_last_command_output.py
-def get_last_command_output(clean_log_path='cleaned-session.log'):
-    with open(clean_log_path, 'r') as f:
-        lines = f.readlines()
+import re
+import subprocess
+import sys
+
+def get_last_command_output(clean_log_path='/Users/sanjanathyady/Desktop/AiBB/Backend/RAG/logs/cleaned-session.log'):
+    try:
+        clean_script = "/Users/sanjanathyady/Desktop/AiBB/Backend/RAG/logs/clean.py"
+
+        subprocess.run([sys.executable, clean_script], check=True)
+        with open(clean_log_path, 'r') as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        return {"cmd": None, "output": None, "error": "Log file not found."}
 
     commands = []
     current = {"cmd": "", "output": []}
@@ -20,14 +29,10 @@ def get_last_command_output(clean_log_path='cleaned-session.log'):
 
     if commands:
         last = commands[-1]
-        print(f"🧠 Last command:\n> {last['cmd']}")
-        print("\n📤 Output:")
-        print("\n".join(last['output']))
-        return last
+        return {
+            "cmd": last['cmd'],
+            "output": "\n".join(last['output'])
+        }
     else:
-        print("No command found.")
-        return None
+        return {"cmd": None, "output": None, "error": "No command found."}
 
-if __name__ == "__main__":
-    get_last_command_output()
-    
