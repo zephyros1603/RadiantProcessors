@@ -2,14 +2,14 @@
 
 Sahyadri College Of Engineering and Management
 
-A comprehensive AI bug bounty system integrated with inbuilt Headerless Kali Container, AI-powered chat assistance. The system uses a distributed architecture to provide intelligent command suggestions, automated tool execution, and report generation on the basis of different vulnerabilities that are present in websites.
+A comprehensive AI bug bounty system integrated with inbuilt Headless Kali Container, AI-powered chat assistance. The system uses a distributed architecture to provide intelligent command suggestions, automated tool execution, and report generation on the basis of different vulnerabilities that are present in websites.
 
 ## 📋 Table of Contents
 - [System Overview](#-system-overview)
 - [Architecture](#-architecture)
 - [Components](#-components)
 - [Setup & Installation](#-setup--installation)
-- [Usage](#-usage)
+  
 
 
 ## 🔍 System Overview
