@@ -110,12 +110,12 @@ const AIAutomationPanel: React.FC = () => {
         <div className="flex-1 text-center">
           <h2 className="text-xl font-semibold">Security AI Assistant</h2>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex text-black space-x-2">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={clearConversation}
-            className="border-[#444] text-white hover:bg-[#3a3a3a]"
+            className="border-[#444] text-bg hover:bg-[#3a3a3a]"
           >
             <Trash size={16} />
           </Button>
@@ -123,7 +123,7 @@ const AIAutomationPanel: React.FC = () => {
             variant="outline" 
             size="sm" 
             onClick={downloadConversation}
-            className="border-[#444] text-white hover:bg-[#3a3a3a]"
+            className="border-[#444] text-bg hover:bg-[#3a3a3a]"
           >
             <Download size={16} />
           </Button>
