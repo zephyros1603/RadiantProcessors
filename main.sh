@@ -30,7 +30,7 @@ tell application "Terminal"
     
     # Fourth terminal for HTTP traffic server
     delay 2
-    do script "cd '"$BASE_DIR"' && ./httptraffic.sh"
+    do script "cd '"$BASE_DIR"' && ./http.sh"
     
     activate
 end tell'

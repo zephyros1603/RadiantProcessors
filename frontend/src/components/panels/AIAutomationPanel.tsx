@@ -85,23 +85,77 @@ const AIAutomationPanel: React.FC = () => {
     ]);
   };
 
-  const downloadConversation = () => {
-    const text = messages.map(m => 
-      `${m.role.toUpperCase()} (${m.timestamp.toLocaleString()}):\n${m.content}\n${
-        m.commands ? '\nCommands:\n' + m.commands.join('\n') + '\n' : ''
-      }\n`
-    ).join('\n');
+  // const downloadConversation = () => {
+  //   const text = messages.map(m => 
+  //     `${m.role.toUpperCase()} (${m.timestamp.toLocaleString()}):\n${m.content}\n${
+  //       m.commands ? '\nCommands:\n' + m.commands.join('\n') + '\n' : ''
+  //     }\n`
+  //   ).join('\n');
     
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `security-ai-conversation-${new Date().toISOString().slice(0, 10)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  //   const blob = new Blob([text], { type: 'text/plain' });
+  //   const url = URL.createObjectURL(blob);
+  //   const a = document.createElement('a');
+  //   a.href = url;
+  //   a.download = `security-ai-conversation-${new Date().toISOString().slice(0, 10)}.txt`;
+  //   document.body.appendChild(a);
+  //   a.click();
+  //   document.body.removeChild(a);
+  //   URL.revokeObjectURL(url);
+  // };
+  const downloadConversation = async () => {
+    try {
+      // First generate the report
+      const genResponse = await fetch('http://localhost:8000/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!genResponse.ok) {
+        throw new Error('Failed to generate report');
+      }
+
+      // Wait for file generation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Download the report
+      const downloadResponse = await fetch('http://localhost:8000/download-report');
+      
+      if (!downloadResponse.ok) {
+        throw new Error('Failed to download report');
+      }
+
+      // Get the blob from the response
+      const blob = await downloadResponse.blob();
+      
+      // Create and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `security-chat-${new Date().toISOString().slice(0, 10)}.md`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: "Chat report downloaded successfully",
+      });
+
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download chat report",
+        variant: "destructive",
+      });
+    }
   };
+
 
   const renderContentWithCopyButtons = (content: string) => {
     return content.split(/(```[\s\S]*?```|`(?!`)[^`]*`)/g).map((part, index) => {
@@ -138,29 +192,29 @@ const AIAutomationPanel: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full p-0 text-white bg-[#252526] relative">
-      <div className="p-4 border-b border-[#323232] flex items-center justify-between">
-        <div className="flex-1 text-center">
-          <h2 className="text-xl font-semibold">Security AI Assistant</h2>
-        </div>
-        <div className="flex text-black space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={clearConversation}
-            className="border-[#444] text-bg hover:bg-[#3a3a3a]"
-          >
-            <Trash size={16} />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={downloadConversation}
-            className="border-[#444] text-bg hover:bg-[#3a3a3a]"
-          >
-            <Download size={16} />
-          </Button>
-        </div>
+    <div className="p-4 border-b border-[#323232] flex items-center justify-between">
+      <div className="flex-1 text-center">
+        <h2 className="text-xl font-semibold">Security AI Assistant</h2>
       </div>
+      <div className="flex text-black space-x-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={clearConversation}
+          className="border-[#444] text-bg hover:bg-[#3a3a3a]"
+        >
+          <Trash size={16} />
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={downloadConversation}
+          className="border-[#444] text-bg hover:bg-[#3a3a3a]"
+        >
+          <Download size={16} />
+        </Button>
+      </div>
+    </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((message, index) => (

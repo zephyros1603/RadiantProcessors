@@ -201,6 +201,13 @@ async def generate_report():
         # Get messages from shared memory
         messages = shared_memory.chat_memory.messages
 
+        # Format messages with timestamp
+        for msg in messages:
+            role = "👤 You" if msg.type == "human" else "🤖 AI"
+            timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+            content = msg.content.strip()
+            report_lines.append(f"\n### {role} — {timestamp}\n{content}\n")
+
         # Create reports directory if it doesn't exist
         reports_dir = "reports"
         if not os.path.exists(reports_dir):
@@ -214,7 +221,7 @@ async def generate_report():
         return {"message": "Report generated successfully", "path": report_path}
 
     except Exception as e:
-        print(f"Error generating report: {str(e)}")  # Add debugging
+        print(f"Error generating report: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 @app.get("/download-report")
