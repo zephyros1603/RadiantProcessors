@@ -24,7 +24,6 @@ The AI Bug Bounty Automation System is designed to streamline and automate secur
 ![image](https://github.com/user-attachments/assets/8dbece6a-3882-494a-ade7-1017ba0e0961)
 
 
-The system consists of several key layers
 
 ## Tech Stacks included
 - **Frontend**
