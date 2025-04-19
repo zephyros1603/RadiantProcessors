@@ -1,11 +1,10 @@
+//AIAutomationPanel.tsx
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Copy, Send, Bot, Trash, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateResponse } from '@/lib/api';
-import { exec } from 'child_process';
-
 
 interface Message {
   role: 'user' | 'ai';
@@ -24,7 +23,7 @@ const AIAutomationPanel: React.FC = () => {
     }
   ]);
   const [isThinking, setIsThinking] = useState(false);
-  const [deepthink , setDeepthink] = useState(false);
+  const [deepthink, setDeepthink] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -47,7 +46,7 @@ const AIAutomationPanel: React.FC = () => {
     setIsThinking(true);
     
     try {
-      const response = await generateResponse(prompt ,deepthink );
+      const response = await generateResponse(prompt, deepthink);
       const aiMessage: Message = {
         role: 'ai',
         content: response.response,
@@ -72,7 +71,7 @@ const AIAutomationPanel: React.FC = () => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Copied!",
-      description: "Command copied to clipboard",
+      description: "Content copied to clipboard",
     });
   };
 
@@ -102,6 +101,39 @@ const AIAutomationPanel: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const renderContentWithCopyButtons = (content: string) => {
+    return content.split(/(```[\s\S]*?```|`(?!`)[^`]*`)/g).map((part, index) => {
+      const isCodeBlock = part.startsWith('```');
+      const isInlineCode = part.startsWith('`') && part.endsWith('`') && !isCodeBlock;
+
+      if (isCodeBlock || isInlineCode) {
+        const codeContent = part
+          .replace(/^```[\s\S]*?\n?/, '')  // Remove starting ```
+          .replace(/```$/, '')             // Remove ending ```
+          .replace(/^`/, '')               // Remove starting `
+          .replace(/`$/, '')               // Remove ending `
+          .trim();
+
+        return (
+          <div key={index} className="relative group bg-[#1a1a1a] rounded-md p-2 my-2">
+            <pre className={`overflow-x-auto whitespace-pre-wrap font-mono text-xs ${
+              isCodeBlock ? 'block' : 'inline'
+            }`}>
+              {codeContent}
+            </pre>
+            <button
+              onClick={() => copyToClipboard(codeContent)}
+              className="absolute top-2 right-2 p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Copy size={12} />
+            </button>
+          </div>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
   };
 
   return (
@@ -150,7 +182,9 @@ const AIAutomationPanel: React.FC = () => {
                 </div>
               )}
               
-              <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+              <div className="text-sm whitespace-pre-wrap">
+                {renderContentWithCopyButtons(message.content)}
+              </div>
               
               {message.commands && (
                 <div className="mt-3 space-y-2">
@@ -217,9 +251,11 @@ const AIAutomationPanel: React.FC = () => {
             <Send size={18} />
           </Button>
         </form>
-        <Button variant='ghost'
-        onClick={()=>setDeepthink((prev)=>!prev)}
-        className={`m-2 rounded-full border-2 opacity-85 ${deepthink? ' bg-neutral-300/30  text-white':""}`}>
+        <Button 
+          variant='ghost'
+          onClick={() => setDeepthink((prev) => !prev)}
+          className={`m-2 rounded-full border-2 opacity-85 ${deepthink ? 'bg-neutral-300/30 text-white' : ''}`}
+        >
           Deepthink
         </Button>
       </div>
@@ -228,7 +264,6 @@ const AIAutomationPanel: React.FC = () => {
 };
 
 export default AIAutomationPanel;
-
 
 
 
