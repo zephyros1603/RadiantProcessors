@@ -18,7 +18,7 @@ The AI Bug Bounty Automation System is designed to streamline and automate secur
 - AI-powered command suggestions
 - Automated tool execution
 - Intelligent result analysis
-- reporting
+- Reporting
 
 ## 🏗 Architecture
 ![image](https://github.com/user-attachments/assets/8dbece6a-3882-494a-ade7-1017ba0e0961)
@@ -76,7 +76,7 @@ Dockerized security tools including:
 
 1. **Clone the Repository**
 ```bash
-git clone 
+git clone <repo_url>
 
 ```
 
