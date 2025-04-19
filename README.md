@@ -32,9 +32,9 @@ The system consists of several key layers
    - Typescript for type safety
 - **Backend**
    - Python, Fast API for backend servers
-   - Nodejs ,Express js
+   - Node.js, Express.js
    - Dockerized Kali Headless OS
-   - 
+   - Langchain 
   
 
 ## 🔧 Components
@@ -42,19 +42,14 @@ The system consists of several key layers
 ### 1. User Interface
 - **Web Dashboard**: Modern web interface for:
   - Tool configuration
-  - Result visualization
   - Report generation
-- **CLI**: Command-line interface for direct tool interaction
+- ** Real Time Kali Terminal**: Command-line interface for direct tool interaction
 
 ### 2. AI Engine
 - **Command Suggestion Engine**
   - Intelligent tool selection
-  - Parameter optimization
   - Context-aware suggestions
-- **Result Analysis Engine**
   - Vulnerability assessment
-  - False positive reduction
-  - Priority scoring
 
 ### 3. Tool Execution Layer
 Dockerized security tools including:
@@ -64,6 +59,7 @@ Dockerized security tools including:
 - **SQLMap**: SQL injection testing
 - **Nmap**: Network scanning
 - **Nuclei**: Vulnerability scanner
+- Other kali tools..
 
 ### 4. Result Processing & Storage
 - **Report Generator**: Creates detailed security reports
@@ -74,14 +70,13 @@ Dockerized security tools including:
 ### Prerequisites
 - Python 3.8+
 - Docker & Docker Compose
-- Headless Kali Docker Image
 
 
 ### Local Setup
 
 1. **Clone the Repository**
 ```bash
-git clone <repository-url>
+git clone 
 
 ```
 
@@ -92,40 +87,12 @@ pip install -r requirements.txt
 
 3. **Start Docker Containers**
 ```bash
-docker-compose up -d
+./start-kali.sh
 ```
 
-4. **Configure Environment**
+3. **Start all servers**
 ```bash
-cp .env.example .env
-# Edit .env with your configurations
-```
-
-## 🎯 Usage
-
-### Starting a Scan
-
-1. **Via Web Dashboard**
-   - Navigate to `http://localhost:8000`
-   - Configure scan parameters
-   - Select target systems
-   - Launch scan
-
-2. **Via CLI**
-```bash
-python cli.py scan --target example.com --tools nikto,nmap
-```
-
-### Viewing Results
-
-1. **Web Interface**
-   - Access the dashboard
-   - Navigate to "Scan Results"
-   - View detailed reports
-
-2. **CLI Output**
-```bash
-python cli.py results --scan-id <scan_id>
+./main.sh
 ```
 
 
