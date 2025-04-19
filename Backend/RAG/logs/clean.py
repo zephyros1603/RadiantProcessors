@@ -1,7 +1,7 @@
 # clean_log.py
 import re
 
-def clean_log_file(input_file='live-session.log', output_file='cleaned-session.log'):
+def clean_log_file(input_file='/Users/sanjanathyady/Desktop/kali-logs/live-session.log', output_file='cleaned-session.log'):
     with open(input_file, 'r', errors='ignore') as f:
         raw = f.read()
 

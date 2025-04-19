@@ -1,7 +1,37 @@
-# get_last_command_output.py
-def get_last_command_output(clean_log_path='cleaned-session.log'):
-    with open(clean_log_path, 'r') as f:
-        lines = f.readlines()
+import re
+import subprocess
+import sys
+# from clean import clean_log_file
+# clean_log.py
+import re
+
+def clean_log_file(input_file='/Users/sanjanathyady/Desktop/kali-logs/live-session.log', output_file='/Users/sanjanathyady/Desktop/AiBB/Backend/RAG/logs/cleaned-session.log'):
+    with open(input_file, 'r', errors='ignore') as f:
+        raw = f.read()
+
+    # Remove ANSI escape codes and control sequences
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    cleaned = ansi_escape.sub('', raw)
+
+    # Remove weird control characters (e.g., ^[)
+    cleaned = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', cleaned)
+    cleaned = re.sub(r'[^\x20-\x7E\r\n]', '', cleaned)
+
+    with open(output_file, 'w') as f:
+        f.write(cleaned)
+
+    print(f"[✓] Cleaned log saved to {output_file}")
+
+if __name__ == "__main__":
+    clean_log_file()
+
+def get_last_command_output(clean_log_path='/Users/sanjanathyady/Desktop/AiBB/Backend/RAG/logs/cleaned-session.log'):
+    try:
+        
+        with open(clean_log_path, 'r') as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        return {"cmd": None, "output": None, "error": "Log file not found."}
 
     commands = []
     current = {"cmd": "", "output": []}
@@ -20,14 +50,10 @@ def get_last_command_output(clean_log_path='cleaned-session.log'):
 
     if commands:
         last = commands[-1]
-        print(f"🧠 Last command:\n> {last['cmd']}")
-        print("\n📤 Output:")
-        print("\n".join(last['output']))
-        return last
+        return {
+            "cmd": last['cmd'],
+            "output": "\n".join(last['output'])
+        }
     else:
-        print("No command found.")
-        return None
+        return {"cmd": None, "output": None, "error": "No command found."}
 
-if __name__ == "__main__":
-    get_last_command_output()
-    
